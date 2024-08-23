@@ -1,0 +1,308 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, classification_report
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSearchCV, RepeatedStratifiedKFold
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.neural_network import MLPClassifier
+from sklearn.naive_bayes import GaussianNB
+import xgboost as xgb
+import warnings
+warnings.filterwarnings('ignore')
+%matplotlib inline
+df = pd.read_csv("/content/Iris.csv")
+df.head()
+print("Number of rows are: ",df.shape[0])
+print("Number of columns are: ",df.shape[1])
+df.info()
+dup = df.duplicated().sum()
+print(f'number of duplicated rows are {dup}')
+df.isnull().sum()
+df.columns
+df.describe(include='all').round(2)
+for i in df.columns.tolist():
+  print("No.of unique values in",i,"is",df[i].nunique())
+df.head()
+plt.figure(figsize=(8,6))
+plt.suptitle('Distribution of Iris Flower Measurements', fontsize=14)
+
+plt.subplot(2,2,1)
+plt.hist(df['SepalLengthCm'], bins=20)
+plt.title('Sepal Length Distribution')
+
+plt.subplot(2,2,2)
+plt.hist(df['SepalWidthCm'], bins=20)
+plt.title('Sepal Width Distribution')
+
+plt.subplot(2,2,3)
+plt.hist(df['PetalLengthCm'], bins=20)
+plt.title('Petal Length Distribution')
+
+plt.subplot(2,2,4)
+plt.hist(df['PetalWidthCm'], bins=20)
+plt.title('Petal Width Distribution')
+
+plt.tight_layout()
+plt.show()
+import matplotlib.pyplot as plt
+Species = df['Species'].unique()
+colors = ['pink', 'lightblue', 'lightgreen']
+plt.figure(figsize=(10, 6))
+for i in range(3):
+    x = df[df['Species'] == Species[i]]
+    plt.scatter(x['SepalLengthCm'], x['SepalWidthCm'], color=colors[i], label=Species[i])
+plt.xlabel('Sepal Length')
+plt.ylabel('Sepal Width')
+plt.legend()
+plt.show()
+for i in range(3):
+    x = df[df['Species'] == Species[i]]
+    plt.scatter(x['PetalLengthCm'], x['PetalWidthCm'], c=colors[i], label=Species[i])
+plt.xlabel('Petal Length')
+plt.ylabel('Petal Width')
+plt.legend()
+plt.show()
+plt.figure(figsize=(10, 6))
+
+for i in range(len(Species)):
+    x = df[df['Species'] == Species[i]]
+    plt.scatter(x['SepalLengthCm'], x['PetalLengthCm'], color=colors[i], label=Species[i])
+plt.xlabel('Sepal Length')
+plt.ylabel('Petal Length')
+plt.legend()
+plt.show()
+plt.figure(figsize=(10, 6))
+
+for i in range(len(Species)):  
+    x = df[df['Species'] == Species[i]]
+    plt.scatter(x['SepalWidthCm'], x['PetalWidthCm'], c=colors[i], label=Species[i])
+plt.xlabel('Sepal Width')
+plt.ylabel('Petal Width')
+plt.legend()
+plt.show()
+data = df.dropna(subset=[ 'SepalLengthCm', 'SepalWidthCm', 'PetalLengthCm','PetalWidthCm'])
+df.dtypes
+from sklearn.impute import SimpleImputer
+
+imputer = SimpleImputer(strategy='mean')
+data[['SepalLengthCm', 'SepalWidthCm', 'PetalLengthCm','PetalWidthCm']] = imputer.fit_transform(data[[ 'SepalLengthCm', 'SepalWidthCm', 'PetalLengthCm','PetalWidthCm']])
+
+
+numeric_data = data.select_dtypes(include='number')
+corr_matrix = numeric_data.corr()
+
+
+
+encoded_data = pd.get_dummies(data)
+corr_matrix = encoded_data.corr()
+corr_matrix = data.corr(numeric_only=True)
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+data_numeric = df.apply(pd.to_numeric, errors='coerce')
+corr_matrix = data_numeric.corr()
+plt.figure(figsize=(8, 4))
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
+plt.title('Correlation Matrix Heatmap')
+plt.show()  
+le = LabelEncoder()
+data['Species'] = le.fit_transform(df['Species'])
+unique_species = data['Species'].unique()
+print("Encoded Species Values:")
+print(unique_species)
+!pip install scikit-learn
+import sklearn
+from sklearn.preprocessing import LabelEncoder
+le = LabelEncoder()
+data['Species'] = le.fit_transform(df['Species'])
+unique_species = df['Species'].unique()
+print("Encoded Species Values:")
+print(unique_species) 
+x=df.drop(columns=['Species'], axis=1)
+y=df['Species']
+x_train,x_test,y_train,y_test=train_test_split(x,y, test_size=0.3)
+y_train.value_counts()
+def evaluate_model(model, x_train, x_test, y_train, y_test):
+
+    # Fit the model to the training data.
+    model.fit(x_train, y_train)
+
+    # make predictions on the test data
+    y_pred_train = model.predict(x_train)
+    y_pred_test = model.predict(x_test)
+
+    # calculate confusion matrix
+    cm_train = confusion_matrix(y_train, y_pred_train)
+    cm_test = confusion_matrix(y_test, y_pred_test)
+
+    fig, ax = plt.subplots(1, 2, figsize=(11,4))
+
+    print("\nConfusion Matrix:")
+    sns.heatmap(cm_train, annot=True, xticklabels=['Negative', 'Positive'], yticklabels=['Negative', 'Positive'], cmap="Blues", fmt='.4g', ax=ax[0])
+    ax[0].set_xlabel("Predicted Label")
+    ax[0].set_ylabel("True Label")
+    ax[0].set_title("Train Confusion Matrix")
+    sns.heatmap(cm_test, annot=True, xticklabels=['Negative', 'Positive'], yticklabels=['Negative', 'Positive'], cmap="Blues", fmt='.4g', ax=ax[1])
+    ax[1].set_xlabel("Predicted Label")
+    ax[1].set_ylabel("True Label")
+    ax[1].set_title("Test Confusion Matrix")
+
+    plt.tight_layout()
+    plt.show()
+
+    # calculate classification report
+    cr_train = classification_report(y_train, y_pred_train, output_dict=True)
+    cr_test = classification_report(y_test, y_pred_test, output_dict=True)
+    print("\nTrain Classification Report:")
+    crt = pd.DataFrame(cr_train).T
+    print(crt.to_markdown())
+    # sns.heatmap(pd.DataFrame(cr_train).T.iloc[:, :-1], annot=True, cmap="Blues")
+    print("\nTest Classification Report:")
+    crt2 = pd.DataFrame(cr_test).T
+    print(crt2.to_markdown())
+    # sns.heatmap(pd.DataFrame(cr_test).T.iloc[:, :-1], annot=True, cmap="Blues")
+
+    precision_train = cr_train['weighted avg']['precision']
+    precision_test = cr_test['weighted avg']['precision']
+
+    recall_train = cr_train['weighted avg']['recall']
+    recall_test = cr_test['weighted avg']['recall']
+
+    acc_train = accuracy_score(y_true = y_train, y_pred = y_pred_train)
+    acc_test = accuracy_score(y_true = y_test, y_pred = y_pred_test)
+
+    F1_train = cr_train['weighted avg']['f1-score']
+    F1_test = cr_test['weighted avg']['f1-score']
+
+    model_score = [precision_train, precision_test, recall_train, recall_test, acc_train, acc_test, F1_train, F1_test ]
+    return model_score
+     # Create a score dataframe
+score = pd.DataFrame(index = ['Precision Train', 'Precision Test','Recall Train','Recall Test','Accuracy Train', 'Accuracy Test', 'F1 macro Train', 'F1 macro Test'])
+
+
+
+# ML Model - 1 Implementation
+lr_model = LogisticRegression(fit_intercept=True, max_iter=10000)
+
+# Model is trained (fit) and predicted in the evaluate model
+
+
+# Visualizing evaluation Metric Score chart
+lr_score = evaluate_model(lr_model, x_train, x_test, y_train, y_test)
+!pip install sklearn
+from sklearn.metrics import classification_report
+
+
+# Check if 'classification_report' is a variable
+if 'classification_report' in globals():
+    # Rename the variable to avoid conflict
+    old_classification_report = classification_report
+    classification_report = None
+
+# Import the 'classification_report' function from 'sklearn.metrics'
+from sklearn.metrics import classification_report
+
+
+
+# Visualizing evaluation Metric Score chart
+lr_score = evaluate_model(lr_model, x_train, x_test, y_train, y_test)
+# Updated Evaluation metric Score Chart
+score['Logistic regression'] = lr_score
+score
+param_grid = {'C': [100,10,1,0.1,0.01,0.001,0.0001],
+              'penalty': ['l1', 'l2'],
+              'solver':['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga']}
+
+# Initializing the logistic regression model
+logreg = LogisticRegression(fit_intercept=True, max_iter=10000, random_state=0)
+
+# Repeated stratified kfold
+rskf = RepeatedStratifiedKFold(n_splits=3, n_repeats=4, random_state=0)
+
+# Using GridSearchCV to tune the hyperparameters using cross-validation
+grid = GridSearchCV(logreg, param_grid, cv=rskf)
+grid.fit(x_train, y_train)
+
+# Select the best hyperparameters found by GridSearchCV
+best_params = grid.best_params_
+print("Best hyperparameters: ", best_params)
+# Initiate model with best parameters
+lr_model2 = LogisticRegression(C=best_params['C'],
+                                  penalty=best_params['penalty'],
+                                  solver=best_params['solver'],
+                                  max_iter=10000, random_state=0)
+
+
+
+# Visualizing evaluation Metric Score chart
+lr_score2 = evaluate_model(lr_model2, x_train, x_test, y_train, y_test)
+score['Logistic regression tuned'] = lr_score2
+
+
+# Updated Evaluation metric Score Chart
+score
+# ML Model - 2 Implementation
+dt_model = DecisionTreeClassifier(random_state=20)
+
+# Model is trained (fit) and predicted in the evaluate model
+
+
+
+# Visualizing evaluation Metric Score chart
+dt_score = evaluate_model(dt_model, x_train, x_test, y_train, y_test)
+# Updated Evaluation metric Score Chart
+score['Decision Tree'] = dt_score
+score
+grid = {'max_depth' : [3,4,5,6,7,8],
+        'min_samples_split' : np.arange(2,8),
+        'min_samples_leaf' : np.arange(10,20)}
+
+# Initialize the model
+model = DecisionTreeClassifier()
+
+# repeated stratified kfold
+rskf = RepeatedStratifiedKFold(n_splits=3, n_repeats=3, random_state=0)
+
+# Initialize GridSearchCV
+grid_search = GridSearchCV(model, grid, cv=rskf)
+
+# Fit the GridSearchCV to the training data
+grid_search.fit(x_train, y_train)
+
+# Select the best hyperparameters
+best_params = grid_search.best_params_
+print("Best hyperparameters: ", best_params)
+
+
+# Train a new model with the best hyperparameters
+dt_model2 = DecisionTreeClassifier(max_depth=best_params['max_depth'],
+                                 min_samples_leaf=best_params['min_samples_leaf'],
+                                 min_samples_split=best_params['min_samples_split'],
+                                 random_state=20)
+     # Visualizing evaluation Metric Score chart
+dt2_score = evaluate_model(dt_model2, x_train, x_test, y_train, y_test)
+import sklearn
+
+
+!pip install scikit-learn
+from sklearn.ensemble import RandomForestClassifier
+
+# Create a RandomForestClassifier model
+rf_model = RandomForestClassifier(random_state=0)
+
+# Train and evaluate the model (code not shown)
+
+
+# ML Model - 3 Implementation
+rf_model = RandomForestClassifier(random_state=0)
+# Visualizing evaluation Metric Score chart
+rf_score = evaluate_model(rf_model, x_train, x_test, y_train, y_test)
+# Updated Evaluation metric Score Chart
+score['Random Forest'] = rf_score
+score
