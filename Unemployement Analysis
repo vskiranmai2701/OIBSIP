@@ -1,0 +1,50 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.express as px
+data=pd.read_csv("/content/Unemployment_Rate_upto_11_2020.csv")
+data
+data.head()
+data.describe()
+data.isnull().sum()
+data.columns
+data.columns=['States',' Date', ' Frequency', ' Estimated Unemployment Rate (%)',
+       ' Estimated Employed', ' Estimated Labour Participation Rate (%)',
+       'Region.1', 'longitude', 'latitude']
+data.head()
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+numeric_data = data.select_dtypes(include=['float64', 'int64'])
+plt.style.use('seaborn-whitegrid')
+plt.figure(figsize=(6, 6))
+ax = sns.heatmap(numeric_data.corr(), annot=True, linewidths=3)
+ax.tick_params(size=10, color='w', labelsize=10, labelcolor='black')
+plt.show()
+print(data.columns)
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Correct any potential issues with column names
+data.columns = ['States', 'Date', 'Frequency', 'Estimated Unemployment Rate (%)',
+                'Estimated Employed', 'Estimated Labour Participation Rate (%)',
+                'Region.1', 'longitude', 'latitude']
+
+# Print column names to ensure they're correctly set
+print(data.columns)
+
+# Plotting the histogram with the correct column names
+plt.title('Indian Unemployment')
+sns.histplot(x='Estimated Employed', hue='Region.1', data=data)
+plt.show()
+import matplotlib.pyplot as plt
+import seaborn as sns
+plt.figure(figsize=(10, 6))
+plt.title('Indian Unemployment')
+sns.histplot(x='Estimated Unemployment Rate (%)', hue='Region.1', data=data)
+plt.show()
+unemployement = data[['States', 'Region.1', 'Estimated Unemployment Rate (%)']]
+figure=px.sunburst(unemployement, path=['Region.1', 'States'], values='Estimated Unemployment Rate (%)',
+                  width=700, height=600, color_continuous_scale='RdY1Gn', title='Indian Unemployment')
+figure.show()
